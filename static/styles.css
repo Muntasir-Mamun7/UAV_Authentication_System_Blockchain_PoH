@@ -1,0 +1,550 @@
+/* ============================================================================
+   Professional UAV Authentication System - Minimal Design
+   Author: Muntasir Al Mamun (@Muntasir-Mamun7)
+   Date: 2025-11-03
+   Version: 3.0.0 - Professional Black & White Theme
+   ============================================================================ */
+
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+
+:root {
+    --primary-dark: #1a1a1a;
+    --secondary-dark: #2d2d2d;
+    --accent-dark: #404040;
+    --border-gray: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --success-green: #10b981;
+    --warning-orange: #f59e0b;
+    --error-red: #ef4444;
+    --info-blue: #3b82f6;
+    --white: #ffffff;
+    --light-bg: #f9fafb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* ============================================================================
+   NAVIGATION BAR
+   ============================================================================ */
+
+.navbar {
+    background: linear-gradient(to right, var(--primary-dark), var(--secondary-dark));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-brand {
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.navbar a {
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.2s ease;
+}
+
+.navbar a:hover {
+    color: var(--white);
+}
+
+#system-status-indicator {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#user-menu-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--white);
+}
+
+#user-menu-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================================
+   CARDS & CONTAINERS
+   ============================================================================ */
+
+.glass-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.success {
+    border-left: 4px solid var(--success-green);
+}
+
+.stat-card.warning {
+    border-left: 4px solid var(--warning-orange);
+}
+
+/* ============================================================================
+   STATUS PANEL
+   ============================================================================ */
+
+.status-panel {
+    background: var(--light-bg);
+    border: 1px solid var(--border-gray);
+}
+
+.status-panel.secured {
+    background: #f0fdf4;
+    border-color: var(--success-green);
+}
+
+.status-panel.tampered {
+    background: #fef2f2;
+    border-color: var(--error-red);
+}
+
+/* ============================================================================
+   BADGES
+   ============================================================================ */
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-primary {
+    background-color: var(--primary-dark);
+    color: var(--white);
+}
+
+.badge-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badge-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* ============================================================================
+   FLIGHT LIST
+   ============================================================================ */
+
+.flight-list-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.flight-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.flight-item:hover {
+    background-color: var(--light-bg);
+    border-left-color: var(--primary-dark);
+}
+
+.flight-item.selected {
+    background-color: var(--light-bg);
+    border-left-color: var(--primary-dark);
+}
+
+/* ============================================================================
+   ACTIVITY FEED
+   ============================================================================ */
+
+.activity-feed-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    border-left: 2px solid var(--border-gray);
+    transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+    border-left-color: var(--primary-dark);
+    background-color: var(--light-bg);
+}
+
+.activity-item.live-flight {
+    border-left-color: var(--success-green);
+    background-color: #f0fdf4;
+}
+
+/* ============================================================================
+   LIVE INDICATOR
+   ============================================================================ */
+
+.live-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: var(--success-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================================================
+   LOG DISPLAY
+   ============================================================================ */
+
+.log-display-container {
+    background: #0d1117;
+    border-radius: 0.5rem;
+}
+
+.log-display {
+    color: #c9d1d9;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ============================================================================
+   HASH DISPLAY
+   ============================================================================ */
+
+.hash-display {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 12px;
+    word-break: break-all;
+    background: var(--light-bg);
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--border-gray);
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* ============================================================================
+   SELECT & INPUTS
+   ============================================================================ */
+
+.select-custom {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+}
+
+/* ============================================================================
+   DROPDOWN MENU
+   ============================================================================ */
+
+#user-dropdown {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================================
+   MODAL
+   ============================================================================ */
+
+#admin-modal {
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ============================================================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--light-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-dark);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-dark);
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+/* ============================================================================
+   FADE IN ANIMATION
+   ============================================================================ */
+
+.fade-in {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================================
+   FOOTER
+   ============================================================================ */
+
+footer {
+    background: linear-gradient(to right, var(--primary-dark), var(--secondary-dark));
+    color: rgba(255, 255, 255, 0.8);
+}
+
+footer a {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+footer a:hover {
+    color: var(--white);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .flight-list-container,
+    .activity-feed-container {
+        max-height: 300px;
+    }
+}
+
+/* ============================================================================
+   ADMIN PANEL STYLES
+   ============================================================================ */
+
+.admin-tab {
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.admin-tab.active {
+    border-bottom-color: var(--primary-dark);
+    color: var(--primary-dark);
+}
+
+.admin-tab:hover:not(.active) {
+    border-bottom-color: var(--border-gray);
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.hidden {
+    display: none !important;
+}
+
+.text-professional {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.bg-professional {
+    background-color: var(--white);
+    border: 1px solid var(--border-gray);
+}
+
+/* ============================================================================
+   DROPDOWN MENU - COMPLETE FIX
+   ============================================================================ */
+
+#user-dropdown {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Force dark text on white background */
+#user-dropdown {
+    background: #ffffff !important;
+    color: #111827 !important;
+}
+
+/* User info header */
+#user-dropdown .bg-gray-50 {
+    background-color: #f9fafb !important;
+}
+
+#user-dropdown .bg-gray-50 p {
+    color: #6b7280 !important;
+}
+
+#user-dropdown #dropdown-username {
+    color: #111827 !important;
+    font-weight: 700;
+}
+
+/* Menu links */
+#user-dropdown a {
+    color: #374151 !important;
+}
+
+#user-dropdown a:hover {
+    color: #111827 !important;
+    background-color: #f9fafb !important;
+}
+
+#user-dropdown a span {
+    color: inherit;
+}
+
+#user-dropdown a svg {
+    color: #6b7280 !important;
+}
+
+/* Admin Panel Link */
+#admin-dropdown-link {
+    color: #111827 !important;
+    font-weight: 600;
+}
+
+#admin-dropdown-link:hover {
+    background-color: #f9fafb !important;
+}
+
+#admin-dropdown-link svg {
+    color: #374151 !important;
+}
+
+/* Logout Button */
+#user-dropdown button {
+    color: #dc2626 !important;
+}
+
+#user-dropdown button:hover {
+    background-color: #fef2f2 !important;
+}
+
+#user-dropdown button span {
+    color: #dc2626 !important;
+}
+
+#user-dropdown button svg {
+    color: #dc2626 !important;
+}
+
+/* Text colors override */
+#user-dropdown .text-xs,
+#user-dropdown .text-sm {
+    color: inherit;
+}
+
+#user-dropdown .text-gray-500 {
+    color: #6b7280 !important;
+}
+
+#user-dropdown .text-gray-700 {
+    color: #374151 !important;
+}
+
+#user-dropdown .text-gray-800,
+#user-dropdown .text-gray-900 {
+    color: #111827 !important;
+}
+
+#user-dropdown .text-red-600 {
+    color: #dc2626 !important;
+}

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoH Flight Data - UAV Authentication System</title>
+    
+    <!-- External CSS Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="antialiased">
+    
+    <!-- Navigation Bar -->
+    <nav class="navbar sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg border border-gray-200">
+                        <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="navbar-brand text-xl font-bold">PoH Flight Data</h1>
+                        <p class="text-xs text-gray-400">UAV Authentication System</p>
+                    </div>
+                </div>
+                
+                <!-- Nav Items -->
+                <div class="flex items-center space-x-6">
+                    <a href="#dashboard" class="hidden md:flex text-sm font-medium text-gray-200 hover:text-white transition items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#logs" class="hidden md:flex text-sm font-medium text-gray-200 hover:text-white transition items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Logs</span>
+                    </a>
+                    <a href="#activity" class="hidden md:flex text-sm font-medium text-gray-200 hover:text-white transition items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <span>Activity</span>
+                    </a>
+                    <div id="system-status-indicator" class="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-white bg-opacity-10 rounded-full border border-white border-opacity-20">
+                        <div class="live-indicator"></div>
+                        <span class="text-xs font-semibold text-white">System Online</span>
+                    </div>
+                    
+                    <!-- User Profile & Logout -->
+                    <div class="relative" id="user-menu-container">
+                        <button id="user-menu-button" type="button" class="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-15 transition shadow-md border border-white border-opacity-20">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span id="username-display" class="text-sm font-semibold">User</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                            <div class="py-2">
+                                <!-- User Info Section -->
+                                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                    <p class="text-xs text-gray-500 font-medium">Signed in as</p>
+                                    <p id="dropdown-username" class="text-sm font-bold text-gray-900 mt-1">User</p>
+                                    <p class="text-xs text-gray-500 mt-1">UAV System</p>
+                                </div>
+                                
+                                <!-- Profile Link -->
+                                <a href="#profile" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    <span class="text-gray-700">My Profile</span>
+                                </a>
+                                
+                                <!-- Settings Link -->
+                                <a href="#settings" class="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="text-gray-700">Settings</span>
+                                </a>
+                                
+                                <!-- Admin Panel Link (For Admin Users Only) -->
+                                <a href="#" onclick="showAdminPanel(); return false;" id="admin-dropdown-link" class="hidden flex items-center space-x-3 px-4 py-3 text-sm text-gray-900 hover:bg-gray-50 transition font-semibold">
+                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                    <span class="text-gray-900">Admin Panel</span>
+                                </a>
+                                
+                                <!-- Divider -->
+                                <div class="border-t border-gray-200 my-2"></div>
+                                
+                                <!-- Logout Button -->
+                                <button onclick="handleLogout()" class="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition">
+                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    <span class="font-semibold text-red-600">Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Stats Section -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 fade-in">
+            <div class="stat-card rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium">Total Flights</p>
+                        <p id="stat-total" class="text-3xl font-bold text-gray-900 mt-1">0</p>
+                    </div>
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="stat-card success rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium">Secured Logs</p>
+                        <p id="stat-secured" class="text-3xl font-bold text-green-600 mt-1">0</p>
+                    </div>
+                    <svg class="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="stat-card warning rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium">Active UAVs</p>
+                        <p id="stat-active" class="text-3xl font-bold text-orange-600 mt-1">0</p>
+                    </div>
+                    <svg class="w-12 h-12 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="stat-card rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium">Total Blocks</p>
+                        <p id="stat-blocks" class="text-3xl font-bold text-gray-900 mt-1">0</p>
+                    </div>
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Flight List + Activity -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Flight List -->
+                <div class="glass-card rounded-2xl p-6 fade-in" id="logs">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            Archived Flights
+                        </h2>
+                        <button onclick="refreshFlights()" class="text-gray-600 hover:text-gray-900 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div id="flight-list-container" class="flight-list-container">
+                        <div class="empty-state">
+                            <div class="animate-spin w-8 h-8 border-4 border-gray-900 border-t-transparent rounded-full mx-auto mb-3"></div>
+                            <p class="text-sm">Loading flights...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Real-time Activity Feed -->
+                <div class="glass-card rounded-2xl p-6 fade-in" id="activity">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <div class="live-indicator mr-2"></div>
+                        Live UAV Activity
+                    </h2>
+                    
+                    <div id="activity-feed" class="activity-feed-container space-y-3">
+                        <div class="empty-state py-8">
+                            <svg class="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            <p class="text-sm font-medium text-gray-600">No Active UAV Flights</p>
+                            <p class="text-xs text-gray-500 mt-1">Start a UAV client to see live telemetry</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Right Column: Controls + Status + Details -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Flight Selection & Status -->
+                <div class="glass-card rounded-2xl p-6 fade-in" id="dashboard">
+                    <div class="grid grid-cols-1 gap-6">
+                        
+                        <!-- Flight Selection -->
+                        <div>
+                            <label for="flight-select" class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                Select Flight for Blockchain Verification
+                            </label>
+                            <select 
+                                id="flight-select" 
+                                class="select-custom block w-full py-3 px-4 pr-10 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-base transition appearance-none"
+                                onchange="loadFlightLog(this.value)"
+                            >
+                                <option value="">Loading flights...</option>
+                            </select>
+                        </div>
+
+                        <!-- Integrity Status -->
+                        <div id="status-panel" class="status-panel p-6 rounded-xl transition-all duration-300">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                        </svg>
+                                        Blockchain Integrity Status
+                                    </h3>
+                                    <div id="status-message" class="text-base font-semibold text-gray-600 mb-3">
+                                        Awaiting flight selection...
+                                    </div>
+                                    <div id="last-hash" class="hash-display hidden">
+                                        <div class="text-xs font-semibold text-gray-600 mb-1">Last Verified Hash:</div>
+                                        <span id="hash-value" class="text-gray-700">N/A</span>
+                                    </div>
+                                </div>
+                                <span id="block-count" class="badge badge-primary hidden">
+                                    0 Blocks
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Flight Log Details -->
+                <div class="glass-card rounded-2xl p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <svg class="w-6 h-6 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                            Authenticated Flight Data
+                        </h2>
+                        <button onclick="exportLog()" class="text-sm font-medium text-gray-700 hover:text-gray-900 transition flex items-center space-x-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-gray-900 rounded-xl overflow-hidden shadow-inner">
+                        <div id="log-content" class="log-display-container p-6">
+                            <pre id="log-table-content" class="log-display text-sm">Select a flight log to view authenticated blockchain data
+
+Flight logs contain:
+   • Blockchain-verified timestamps
+   • GPS coordinates and altitude data
+   • Velocity and acceleration metrics
+   • Authentication records with session keys
+   • Tamper-proof hash chains (PoH)
+
+All data is cryptographically secured using Proof of History</pre>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+
+        <!-- 2D Flight Path Visualization Section -->
+        <div class="glass-card rounded-2xl p-6 fade-in mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-6 h-6 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Flight Path Analysis
+                </h2>
+            </div>
+            
+            <!-- Flight Path Chart -->
+            <div class="bg-white rounded-xl p-4 mb-4" style="height: 400px;">
+                <canvas id="flightPathChart"></canvas>
+            </div>
+            
+            <!-- Flight Metrics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-xs text-gray-600 font-semibold">Total Distance</p>
+                    <p id="stat-distance" class="text-2xl font-bold text-gray-900">0 m</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-xs text-gray-600 font-semibold">Max Altitude</p>
+                    <p id="stat-max-alt" class="text-2xl font-bold text-gray-900">0 m</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-xs text-gray-600 font-semibold">Avg Speed</p>
+                    <p id="stat-avg-speed" class="text-2xl font-bold text-gray-900">0 m/s</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-xs text-gray-600 font-semibold">Flight Duration</p>
+                    <p id="stat-duration" class="text-2xl font-bold text-gray-900">0 s</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Smart Contracts & Anomaly Detection Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            
+            <!-- Smart Contracts Panel -->
+            <div class="glass-card rounded-2xl p-6 fade-in">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Smart Contracts
+                </h2>
+                
+                <div id="contracts-list" class="space-y-3 mb-4" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="text-sm">Loading contract status...</p>
+                    </div>
+                </div>
+                
+                <button onclick="refreshContracts()" class="w-full py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition font-medium">
+                    Refresh Contract Status
+                </button>
+            </div>
+            
+            <!-- Anomaly Detection Panel -->
+            <div class="glass-card rounded-2xl p-6 fade-in">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    AI Anomaly Detection
+                </h2>
+                
+                <div id="anomaly-stats" class="space-y-3 mb-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="text-sm">Loading AI model status...</p>
+                    </div>
+                </div>
+                
+                <button onclick="retrainModel()" class="w-full py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition font-medium">
+                    Retrain AI Model
+                </button>
+            </div>
+            
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="text-center md:text-left">
+                    <p class="text-sm font-medium">
+                        &copy; 2025 <span class="font-bold">Muntasir Al Mamun</span> - UAV Authentication System based on PoH
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        Blockchain-Based UAV Authentication & Verification System
+                    </p>
+                </div>
+                <div class="flex items-center space-x-6 text-sm">
+                    <a href="https://github.com/Muntasir-Mamun7" target="_blank" class="hover:text-gray-300 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                    <a href="documentation.html" class="hover:text-gray-300 transition flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Documentation
+                    </a>
+                    <div class="text-xs text-gray-400">
+                        v3.0.0
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+
+</body>
+</html>
